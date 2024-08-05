@@ -1,0 +1,20 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: test-username
+      MONGO_INITDB_ROOT_PASSWORD: test-password
+      MONGO_INITDB_DATABASE: test-svc
+    volumes:
+      - ./mongo/scripts:/docker-entrypoint-initdb.d
+      - ./mongo/file.key:/data/db/file.key
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: echo 'rs.initiate().ok || rs.status().ok' | mongosh -u $${MONGO_INITDB_ROOT_USERNAME} -p $${MONGO_INITDB_ROOT_PASSWORD} --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    stop_grace_period: 30s
+    command: "--keyFile /data/db/file.key --bind_ip_all --replSet rs0"
